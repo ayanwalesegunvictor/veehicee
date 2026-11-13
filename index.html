@@ -137,8 +137,13 @@ label{font-size:.88rem;color:var(--muted)}.status{color:var(--accent);min-height
 <section class="section" id="contact"><div class="wrap contact">
 <div><h2>Got an idea?<br>Let's make it real.</h2><p class="intro">Tell us what you are working towards. We reply to every enquiry.</p></div>
 <div class="card"><h3 style="margin-top:0">Send an enquiry</h3>
-<form id="contactForm"><label for="n">Your name</label><input id="n" name="name" required><label for="c">Email or phone</label><input id="c" name="contact" required><label for="m">How can we help?</label><textarea id="m" name="message" rows="4" required></textarea>
-<button class="btn" type="submit">Send enquiry</button><p class="status" id="contactStatus" role="status"></p></form></div>
+<form id="contactForm">
+<label for="n">Your name</label><input id="n" name="name" required>
+<label for="c">Email or phone</label><input id="c" name="contact" required>
+<label for="m">How can we help?</label><textarea id="m" name="message" rows="4" required></textarea>
+<!-- honeypot: bots fill this, humans don't see it -->
+<input type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;height:0;width:0;opacity:0">
+<button class="btn" type="submit">Send enquiry</button><p class="status" id="contactStatus" role="status" aria-live="polite"></p></form></div>
 </div></section>
 </main>
 
@@ -149,16 +154,33 @@ label{font-size:.88rem;color:var(--muted)}.status{color:var(--accent);min-height
 
 <div class="modal" id="adminModal"><div class="modal-box">
 <div class="mh"><h2>Veehicee admin</h2><button class="ghost" onclick="closeAdmin()">Close</button></div>
-<div id="loginPanel"><p class="intro">Sign in to manage your website.</p><label>Admin email</label><input id="adminEmail" type="email" autocomplete="username"><label>Password</label><input id="adminPassword" type="password" autocomplete="current-password"><button class="btn" onclick="adminLogin()">Sign in</button><p class="status" id="loginStatus"></p></div>
-<div id="dashboard" hidden><p class="status" id="adminStatus">Signed in.</p>
+<div id="loginPanel"><p class="intro">Sign in to manage your website.</p>
+<label for="adminEmail">Admin email</label><input id="adminEmail" type="email" autocomplete="username">
+<label for="adminPassword">Password</label><input id="adminPassword" type="password" autocomplete="current-password">
+<button class="btn" onclick="adminLogin()">Sign in</button><p class="status" id="loginStatus" role="status" aria-live="polite"></p></div>
+<div id="dashboard" hidden><p class="status" id="adminStatus" role="status" aria-live="polite">Signed in.</p>
 <div class="agrid">
-<div><h3>Page content</h3><label>Page or section title</label><input id="pageTitle" placeholder="About us"><label>Content</label><textarea id="pageBody" rows="4"></textarea><label>Status</label><select id="pagePublished"><option value="true">Published</option><option value="false">Draft</option></select><button class="btn" onclick="savePage()">Save content</button><div id="pagesList" style="margin-top:14px"></div></div>
-<div><h3>Add marketplace product</h3><label>Name</label><input id="pName"><label>Category</label><input id="pCat" placeholder="Charging"><label>Price (₦)</label><input id="pPrice" type="number" min="0"><label>Stock</label><input id="pStock" type="number" min="0"><label>Image URL (optional)</label><input id="pImg" type="url"><label>Description</label><input id="pDesc"><button class="btn" onclick="saveProduct()">Save product</button></div>
+<div><h3>Page content</h3>
+<label for="pageTitle">Page or section title</label><input id="pageTitle" placeholder="About us">
+<label for="pageBody">Content</label><textarea id="pageBody" rows="4"></textarea>
+<label for="pagePublished">Status</label><select id="pagePublished"><option value="true">Published</option><option value="false">Draft</option></select>
+<button class="btn" onclick="savePage()">Save content</button>
+<div id="pagesList" style="margin-top:14px"></div></div>
+<div><h3>Add marketplace product</h3>
+<label for="pName">Name</label><input id="pName">
+<label for="pCat">Category</label><input id="pCat" placeholder="Charging">
+<label for="pPrice">Price (₦)</label><input id="pPrice" type="number" min="0">
+<label for="pStock">Stock</label><input id="pStock" type="number" min="0">
+<label for="pImg">Image URL (optional)</label><input id="pImg" type="url">
+<label for="pDesc">Description</label><input id="pDesc">
+<button class="btn" onclick="saveProduct()">Save product</button></div>
 </div><p style="margin-top:18px"><button class="ghost" onclick="adminLogout()">Sign out</button></p></div>
 </div></div>
 
 <script>
-const API_URL = "https://script.google.com/macros/s/AKfycbxJDMhW-69GeSz8M_MeHgad-58KX83Lp65rGZL5FiJauTXwWRy_727IUM0cq38ddNVJYA/exec";
+/* ───────── CONFIG ───────── */
+const API_URL = "https://script.google.com/macros/s/AKfycbyOZOCPk8UOk1JtwnMosi9pnCY685lXhSiUFrIUSMKM2R68CpikDiXgsn3cx_K1q-H2_g/exec";
+
 let adminToken = "";
 const $ = id => document.getElementById(id);
 const root = document.documentElement;
@@ -167,13 +189,17 @@ function openAdmin(){$("adminModal").classList.add("open")}
 function closeAdmin(){$("adminModal").classList.remove("open")}
 
 async function api(action,data={}){
-  const r = await fetch(API_URL,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({action,...data})});
+  const r = await fetch(API_URL,{
+    method:"POST",
+    headers:{"Content-Type":"text/plain;charset=utf-8"},
+    body:JSON.stringify({action,...data})
+  });
   const j = await r.json();
   if(!j.ok) throw new Error(j.error||"Request failed");
   return j;
 }
 
-/* themes + templates */
+/* ───────── THEMES + LAYOUTS ───────── */
 const THEMES=[["midnight","Midnight","#5df0c8"],["sunrise","Sunrise","#ff5b37"],["royal","Royal","#ffc83d"],["forest","Forest","#b6f25b"],["ocean","Ocean","#1457ff"],["berry","Berry","#ff4fa3"]];
 const LAYOUTS=[["split","Split","Text left, signal right"],["center","Centered","Everything on the middle line"],["bold","Bold","Giant type, list-style services"]];
 function store(k,v){try{localStorage.setItem(k,v)}catch(e){}}
@@ -189,18 +215,22 @@ LAYOUTS.forEach(([v,n,d])=>{const b=document.createElement("button");b.className
 $("fab").onclick=()=>{const o=$("studio").classList.toggle("open");$("fab").setAttribute("aria-expanded",o)};
 apply();
 
-/* marketplace */
+/* ───────── MARKETPLACE ───────── */
 const SAMPLE=[["Phone accessories","Cases, cables and screen protection","📱"],["Charging essentials","Chargers and fast-charge cables","🔌"],["Audio","Earphones and speakers","🎧"],["Power banks","Stay powered through the day","🔋"]];
 function enquire(name){$("m").value="Hello, I'm interested in: "+name;location.hash="#contact";$("n").focus({preventScroll:true})}
 async function loadProducts(){
   const box=$("products");let list=[];
-  try{list=(await api("publicProducts")).products||[]}catch(e){}
+  try{list=(await api("publicProducts")).products||[]}
+  catch(e){console.warn("publicProducts failed, showing sample:",e.message)}
   box.innerHTML="";
   if(!list.length){SAMPLE.forEach(([n,d,i])=>list.push({name:n,description:d,icon:i}))}
   list.forEach(p=>{
     const el=document.createElement("article");el.className="prod";
     const img=document.createElement("div");img.className="img";
-    if(p.imageUrl){const im=document.createElement("img");im.src=p.imageUrl;im.alt=p.name;im.loading="lazy";im.onerror=()=>{im.remove();img.textContent="🛍"};img.append(im)}else img.textContent=p.icon||"🛍";
+    if(p.imageUrl && /^https?:\/\//i.test(p.imageUrl)){
+      const im=document.createElement("img");im.src=p.imageUrl;im.alt=p.name;im.loading="lazy";
+      im.onerror=()=>{im.remove();img.textContent="🛍"};img.append(im);
+    } else img.textContent=p.icon||"🛍";
     const b=document.createElement("div");b.className="body";
     const h=document.createElement("h3");h.textContent=p.name;
     const s=document.createElement("small");s.textContent=p.description||p.category||"";
@@ -212,34 +242,105 @@ async function loadProducts(){
 }
 loadProducts();
 
-/* contact */
+/* ───────── CONTACT ───────── */
 $("contactForm").addEventListener("submit",async e=>{
   e.preventDefault();$("contactStatus").textContent="Sending…";const f=new FormData(e.target);
-  try{await api("submitEnquiry",{name:f.get("name"),contact:f.get("contact"),message:f.get("message")});$("contactStatus").textContent="Thank you. We have received your enquiry.";e.target.reset()}
-  catch(err){$("contactStatus").textContent=err.message}
+  try{
+    await api("submitEnquiry",{
+      name:f.get("name"),
+      contact:f.get("contact"),
+      message:f.get("message"),
+      website:f.get("website")||""
+    });
+    $("contactStatus").textContent="Thank you. We have received your enquiry.";
+    e.target.reset();
+  }catch(err){$("contactStatus").textContent=err.message}
 });
 
-/* admin */
+/* ───────── ADMIN: LOGIN ───────── */
 async function adminLogin(){
   $("loginStatus").textContent="Signing in…";
-  try{const r=await api("adminLogin",{email:$("adminEmail").value,password:$("adminPassword").value});adminToken=r.token;$("loginPanel").hidden=true;$("dashboard").hidden=false;await loadPages()}
-  catch(e){$("loginStatus").textContent=e.message}
+  try{
+    const r=await api("adminLogin",{email:$("adminEmail").value,password:$("adminPassword").value});
+    adminToken=r.token;
+    $("loginPanel").hidden=true;$("dashboard").hidden=false;
+    $("adminStatus").textContent="Signed in as "+r.email;
+    await loadPages();
+  }catch(e){
+    $("adminPassword").value="";
+    $("loginStatus").textContent=e.message;
+  }
 }
+$("adminPassword").addEventListener("keydown",e=>{if(e.key==="Enter")adminLogin()});
+
+/* ───────── ADMIN: PAGES ───────── */
 async function loadPages(){
-  try{const r=await api("adminListPages",{token:adminToken});$("pagesList").innerHTML="";
-    (r.pages||[]).forEach(p=>{const el=document.createElement("div");el.className="aitem";const s=document.createElement("span");s.textContent=p.title+(p.published?"":" (draft)");const b=document.createElement("button");b.className="ghost";b.textContent="Edit";b.onclick=()=>{$("pageTitle").value=p.title;$("pageBody").value=p.body;$("pagePublished").value=String(p.published)};el.append(s,b);$("pagesList").append(el)})
+  try{
+    const r=await api("adminListPages",{token:adminToken});
+    $("pagesList").innerHTML="";
+    (r.pages||[]).forEach(p=>{
+      const el=document.createElement("div");el.className="aitem";
+      const s=document.createElement("span");s.textContent=p.title+(p.published?"":" (draft)");
+      const b=document.createElement("button");b.className="ghost";b.textContent="Edit";
+      b.onclick=()=>{
+        $("pageTitle").value=p.title;
+        $("pageBody").value=p.body;
+        $("pagePublished").value=String(p.published);
+        $("pageTitle").dataset.editingId=p.id;   /* ← remember id for savePage */
+      };
+      el.append(s,b);$("pagesList").append(el);
+    });
   }catch(e){$("adminStatus").textContent=e.message}
 }
 async function savePage(){
-  try{await api("adminSavePage",{token:adminToken,title:$("pageTitle").value,body:$("pageBody").value,published:$("pagePublished").value==="true"});$("adminStatus").textContent="Content saved.";await loadPages()}
-  catch(e){$("adminStatus").textContent=e.message}
+  try{
+    const id=$("pageTitle").dataset.editingId||"";
+    await api("adminSavePage",{
+      token:adminToken,
+      id:id,
+      title:$("pageTitle").value,
+      body:$("pageBody").value,
+      published:$("pagePublished").value==="true"
+    });
+    delete $("pageTitle").dataset.editingId;
+    $("adminStatus").textContent="Content saved.";
+    $("pageTitle").value="";$("pageBody").value="";
+    await loadPages();
+  }catch(e){$("adminStatus").textContent=e.message}
 }
+
+/* ───────── ADMIN: PRODUCTS ───────── */
 async function saveProduct(){
-  try{await api("adminSaveProduct",{token:adminToken,name:$("pName").value,category:$("pCat").value,price:$("pPrice").value,stock:$("pStock").value,imageUrl:$("pImg").value,description:$("pDesc").value,active:true});
-    $("adminStatus").textContent="Product saved.";["pName","pCat","pPrice","pStock","pImg","pDesc"].forEach(i=>$(i).value="");loadProducts()}
-  catch(e){$("adminStatus").textContent=e.message}
+  const imageUrl=$("pImg").value.trim();
+  if(imageUrl && !/^https?:\/\//i.test(imageUrl)){
+    $("adminStatus").textContent="Image URL must start with http:// or https://";
+    return;
+  }
+  try{
+    await api("adminSaveProduct",{
+      token:adminToken,
+      name:$("pName").value,
+      category:$("pCat").value,
+      price:$("pPrice").value,
+      stock:$("pStock").value,
+      imageUrl:imageUrl,
+      description:$("pDesc").value,
+      active:true
+    });
+    $("adminStatus").textContent="Product saved.";
+    ["pName","pCat","pPrice","pStock","pImg","pDesc"].forEach(i=>$(i).value="");
+    loadProducts();
+  }catch(e){$("adminStatus").textContent=e.message}
 }
-async function adminLogout(){try{await api("adminLogout",{token:adminToken})}catch(e){}adminToken="";$("dashboard").hidden=true;$("loginPanel").hidden=false}
+
+/* ───────── ADMIN: LOGOUT ───────── */
+async function adminLogout(){
+  try{await api("adminLogout",{token:adminToken})}catch(e){}
+  adminToken="";
+  $("dashboard").hidden=true;$("loginPanel").hidden=false;
+  $("loginStatus").textContent="";
+  $("adminEmail").value="";$("adminPassword").value="";
+}
 </script>
 </body>
 </html>
